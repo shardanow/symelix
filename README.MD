@@ -58,12 +58,13 @@ AI Wellness Bot is a Telegram bot designed to help users track their emotions, h
 
 2. Configure the `.env` file with your secrets:
    ```env
-   TELEGRAM_TOKEN=<your-telegram-token>
+   TELEGRAM_BOT_TOKEN=<your-telegram-token>
    OPENAI_API_KEY=<your-openai-api-key>
    GARMIN_API_KEY=<your-garmin-api-key>
    POSTGRES_USER=symelix
    POSTGRES_PASSWORD=root
    POSTGRES_DB=symelix
+   DATABASE_URL=postgresql+asyncpg://symelix:root@db:5432/symelix
    ```
 
 ## Docker Setup
