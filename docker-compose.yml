@@ -32,7 +32,7 @@ services:
   celery:
     build: .
     container_name: symelix_celery
-    command: celery -A worker.celery_app worker --loglevel=info
+    command: celery -A tasks.celery_app worker --loglevel=info
     volumes:
       - .:/app
     depends_on:
@@ -46,7 +46,7 @@ services:
   beat:
     build: .
     container_name: symelix_beat
-    command: celery -A worker.celery_app beat --loglevel=info
+    command: celery -A tasks.celery_app beat --loglevel=info
     volumes:
       - .:/app
     depends_on:

@@ -1,30 +1,15 @@
 import asyncio
 from datetime import datetime
-from celery import Celery
 from aiogram import Bot
 from config import TELEGRAM_BOT_TOKEN
 from db.database import get_db
 from db import crud
 from core.summary import get_today_moods, get_today_habits, get_today_health
 from ai.analyzer import analyze_day
-from celery.schedules import crontab
 
 bot = Bot(token=TELEGRAM_BOT_TOKEN, parse_mode="HTML")
 
-celery_app = Celery("tasks", broker="redis://redis:6379/0")
-
-@celery_app.task
-def send_morning_summary():
-    asyncio.run(_send_summary_to_all())
-
-
-async def _send_summary_to_all():
-    async for session in get_db():
-        users = await crud.get_active_subscribers(session)
-        for user in users:
-            await _send_summary(user.chat_id)
-
-async def _send_summary(chat_id: int):
+async def send_summary(chat_id: int):
     async for session in get_db():
         moods = await get_today_moods(session, chat_id)
         habits = await get_today_habits(session, chat_id)
@@ -49,11 +34,10 @@ async def _send_summary(chat_id: int):
         geo_tomorrow=geo_tomorrow.to_dict() if geo_tomorrow else {},
     )
 
-    await bot.send_message(chat_id, f"⏰ <b>Утренний совет от AI:</b>\n\n{analysis}")
+    await bot.send_message(chat_id, f"\u23F0 <b>Утренний совет от AI:</b>\n\n{analysis}")
 
-celery_app.conf.beat_schedule = {
-    "send_morning_advice": {
-        "task": "worker.send_morning_summary",
-        "schedule": crontab(hour=8, minute=0),
-    }
-}
+async def send_summary_to_all():
+    async for session in get_db():
+        users = await crud.get_active_subscribers(session)
+        for user in users:
+            await send_summary(user.chat_id)
