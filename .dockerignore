@@ -1,0 +1,9 @@
+# Adding new files and directories to ignore
+.env
+*.db
+.idea/
+.vscode/
+.git
+__pycache__/
+*.pyc
+*.pyo
