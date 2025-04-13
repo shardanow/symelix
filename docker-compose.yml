@@ -9,6 +9,7 @@ services:
       - .:/app
     depends_on:
       - db
+      - redis
 
   db:
     image: postgres:14
@@ -22,6 +23,39 @@ services:
     restart: unless-stopped
     ports:
       - "5432:5432"
+
+  redis:
+    image: redis:alpine
+    container_name: symelix_redis
+    restart: unless-stopped
+
+  celery:
+    build: .
+    container_name: symelix_celery
+    command: celery -A worker.celery_app worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - bot
+      - redis
+      - db
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  beat:
+    build: .
+    container_name: symelix_beat
+    command: celery -A worker.celery_app beat --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+    restart: unless-stopped
+
 
 volumes:
   postgres_data:

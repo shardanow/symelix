@@ -4,6 +4,14 @@ from datetime import datetime, date
 class Base(DeclarativeBase):
     pass
 
+class Subscriber(Base):
+    __tablename__ = "subscribers"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    chat_id: Mapped[int]
+    username: Mapped[str | None]
+    active: Mapped[bool] = mapped_column(default=True)
+
+
 class MoodEntry(Base):
     __tablename__ = "mood_entries"
 

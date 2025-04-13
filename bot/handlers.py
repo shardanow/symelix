@@ -45,6 +45,11 @@ class HealthStates(StatesGroup):
 async def cmd_start(message: types.Message):
     await message.answer("Привет! Я твой AI-ассистент. Готов записывать твоё самочувствие.")
 
+@router.message(Command("subscribe"))
+async def cmd_subscribe(message: types.Message):
+    async for session in get_db():
+        await crud.add_subscriber(session, message.chat.id, message.from_user.username)
+    await message.answer("✅ Теперь ты подписан на напоминания!")
 
 # === Настроение ===
 @router.message(Command("mood"))

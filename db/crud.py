@@ -6,7 +6,8 @@ from db.models import (
     HabitEntry,
     HealthEntry,
     WeatherEntry,
-    GeomagneticEntry
+    GeomagneticEntry,
+    Subscriber
 )
 
 async def save_mood(session: AsyncSession, user_id: int, mood: str, comment: str | None = None):
@@ -78,3 +79,22 @@ async def get_geomagnetic(session: AsyncSession, date: date, day_type: str):
     stmt = select(GeomagneticEntry).where(GeomagneticEntry.date == date, GeomagneticEntry.type == day_type)
     result = await session.execute(stmt)
     return result.scalars().first()
+
+
+async def add_subscriber(session: AsyncSession, chat_id: int, username: str | None):
+    exists_stmt = select(Subscriber).where(Subscriber.chat_id == chat_id)
+    res = await session.execute(exists_stmt)
+    existing = res.scalar_one_or_none()
+
+    if existing:
+        existing.active = True
+    else:
+        session.add(Subscriber(chat_id=chat_id, username=username))
+
+    await session.commit()
+
+
+async def get_active_subscribers(session: AsyncSession):
+    stmt = select(Subscriber).where(Subscriber.active == True)
+    res = await session.execute(stmt)
+    return res.scalars().all()
