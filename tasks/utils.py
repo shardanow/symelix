@@ -1,13 +1,28 @@
 import asyncio
 from datetime import datetime
 from aiogram import Bot
+from aiogram.enums import ParseMode
+from aiogram.client.default import DefaultBotProperties
 from config import TELEGRAM_BOT_TOKEN
 from db.database import get_db
 from db import crud
 from core.summary import get_today_moods, get_today_habits, get_today_health
 from ai.analyzer import analyze_day
 
-bot = Bot(token=TELEGRAM_BOT_TOKEN, parse_mode="HTML")
+# Using DefaultBotProperties for setting default properties
+bot = Bot(
+    token=TELEGRAM_BOT_TOKEN,
+    default=DefaultBotProperties(
+        parse_mode=ParseMode.HTML,
+        link_preview_is_disabled=True,
+        protect_content=False
+    )
+)
+
+async def get_active_users():
+    """Get all active subscribers using a dedicated async context"""
+    async for session in get_db():
+        return await crud.get_active_subscribers(session)
 
 async def send_summary(chat_id: int):
     async for session in get_db():

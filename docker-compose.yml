@@ -2,14 +2,58 @@ services:
   bot:
     build: .
     container_name: symelix_bot
+    environment:
+      - TZ=Europe/Kyiv
     env_file:
       - .env
     restart: unless-stopped
     volumes:
       - .:/app
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     depends_on:
       - db
       - redis
+
+  celery:
+    build: .
+    container_name: symelix_celery
+    environment:
+      - TZ=Europe/Kyiv
+    command: celery -A tasks.celery_app worker --loglevel=info --pool=prefork
+    volumes:
+      - .:/app
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - bot
+      - redis
+      - db
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  beat:
+    build: .
+    container_name: symelix_beat
+    environment:
+      - TZ=Europe/Kyiv
+    command: celery -A tasks.celery_app beat --loglevel=info
+    volumes:
+      - .:/app
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: symelix_redis
+    restart: unless-stopped
 
   db:
     image: postgres:14
@@ -23,39 +67,6 @@ services:
     restart: unless-stopped
     ports:
       - "5432:5432"
-
-  redis:
-    image: redis:alpine
-    container_name: symelix_redis
-    restart: unless-stopped
-
-  celery:
-    build: .
-    container_name: symelix_celery
-    command: celery -A tasks.celery_app worker --loglevel=info
-    volumes:
-      - .:/app
-    depends_on:
-      - bot
-      - redis
-      - db
-    env_file:
-      - .env
-    restart: unless-stopped
-
-  beat:
-    build: .
-    container_name: symelix_beat
-    command: celery -A tasks.celery_app beat --loglevel=info
-    volumes:
-      - .:/app
-    depends_on:
-      - redis
-      - db
-    env_file:
-      - .env
-    restart: unless-stopped
-
 
 volumes:
   postgres_data:
