@@ -28,6 +28,12 @@ def remind_vitamins():
     loop = asyncio.get_event_loop()
     loop.run_until_complete(_run_reminder("💊 Напоминание: не забудь выпить витамины!"))
 
+@celery_app.task
+def remind_exercise():
+    print("🏋️ Задача remind_exercise запущена")
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(_run_reminder("🏋️ Напоминание: не забудь размяться!"))
+
 
 async def _run_reminder(message_text: str):
     bot = Bot(

@@ -4,15 +4,53 @@ from config import OPENAI_API_KEY
 client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 def format_weather(data: dict) -> str:
-    return (
-        f"Возможно в течении дня: {data['weather_code']}. "
-        f"Температура: от {data['temperature']['min']}°C до {data['temperature']['max']}°C, "
-        f"средняя {data['temperature']['avg']}°C. "
-        f"Давление: {data['pressure']['avg']} гПа. "
-        f"Влажность: {data['humidity']['avg']}%. "
-        f"Ветер: {data['wind']['avg']} м/с. "
-        f"UV-индекс: {data['uv_index']}."
-    )
+    if not data:
+        return "Нет данных о погоде."
+    
+    # Create a safe dictionary access method with defaults
+    def safe_get(dictionary, keys, default="Нет данных"):
+        """Safely get nested values from a dictionary with a default value if missing"""
+        if not dictionary:
+            return default
+            
+        current = dictionary
+        for key in keys:
+            if isinstance(current, dict) and key in current:
+                current = current[key]
+            else:
+                return default
+        return current
+    
+    # Build weather description with safe access to all fields
+    weather_parts = []
+    
+    # Weather code
+    weather_code = safe_get(data, ['weather_code'], "Неизвестно")
+    weather_parts.append(f"Возможно в течении дня: {weather_code}")
+    
+    # Temperature
+    temp_min = safe_get(data, ['temperature', 'min'], "N/A")
+    temp_max = safe_get(data, ['temperature', 'max'], "N/A") 
+    temp_avg = safe_get(data, ['temperature', 'avg'], "N/A")
+    weather_parts.append(f"Температура: от {temp_min}°C до {temp_max}°C, средняя {temp_avg}°C")
+    
+    # Pressure
+    pressure = safe_get(data, ['pressure', 'avg'], "N/A")
+    weather_parts.append(f"Давление: {pressure} гПа")
+    
+    # Humidity
+    humidity = safe_get(data, ['humidity', 'avg'], "N/A")
+    weather_parts.append(f"Влажность: {humidity}%")
+    
+    # Wind
+    wind = safe_get(data, ['wind', 'avg'], "N/A")
+    weather_parts.append(f"Ветер: {wind} м/с")
+    
+    # UV Index
+    uv_index = safe_get(data, ['uv_index'], "N/A")
+    weather_parts.append(f"UV-индекс: {uv_index}")
+    
+    return ". ".join(weather_parts) + "."
 
 def format_geomagnetic(data: dict | None) -> str:
     if not data or "avg" not in data or "max" not in data:
